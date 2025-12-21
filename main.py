@@ -9,13 +9,8 @@ from sklearn.metrics import make_scorer
 from utils.tiny_utils import pu_f1_modified
 from utils.tiny_utils import TestSample
 
-# Set page configuration - must be the first Streamlit command
-st.set_page_config(
-    page_title="TinyGS QoS", page_icon="🛰️", layout="wide", initial_sidebar_state="auto"
-)
-
 pu_f1_scorer = make_scorer(pu_f1_modified)
-st.title("TinyGS QoS Predictor")
+st.title("TinyGS QoS Data Overview")
 
 
 class TransmissionPredictor:
@@ -120,7 +115,7 @@ class TransmissionPredictor:
 
     def plot_transmission_probability(
         self, sf: int, bw: float, cr: int, gain: float, alt: float
-    ):
+    ) -> plt.Figure:
         """
         Generate a transmission probability heatmap.
 
@@ -139,8 +134,8 @@ class TransmissionPredictor:
 
         Returns:
         --------
-        tuple
-            (matplotlib.figure.Figure, pd.DataFrame) - Figure and X_grid data
+        matplotlib.figure.Figure
+            Figure containing the probability heatmap
         """
         # Generate grid samples
         X_grid = TestSample(
@@ -193,7 +188,7 @@ class TransmissionPredictor:
         )
         ax.legend()
         plt.tight_layout()
-        return fig, X_grid
+        return fig
 
 
 @st.cache_resource
@@ -263,10 +258,13 @@ def main():
         alt = st.number_input(
             "Satellite Altitude (km)",
             min_value=400.0,
-            max_value=1100.0,
+            max_value=1600.0,
             value=600.0,
-            step=50.0,
+            step=10.0,
         )
+
+    # Validation and warnings
+    st.subheader("Validation")
 
     warnings = []
     errors = []
@@ -278,6 +276,24 @@ def main():
             f"Valid pairs are: {sorted(valid_pairs)}"
         )
 
+    # SF constraints
+    if sf < 7 or sf > 11:
+        errors.append(f"Error: SF must be between 7 and 11 (got {sf})")
+
+    # BW constraints
+    valid_bw = [62.5, 125.0, 250.0, 500.0]
+    if bw not in valid_bw:
+        warnings.append(
+            f"Warning: BW={bw} kHz is non-standard. " f"Common values are: {valid_bw}"
+        )
+
+    # Gain constraints
+    if gain < -10 or gain > 20:
+        warnings.append(
+            f"Warning: Antenna gain of {gain} dB is unusual. "
+            f"Typical range is -10 to +20 dB"
+        )
+
     # Display warnings and errors
     for warning in warnings:
         st.warning(warning)
@@ -285,41 +301,23 @@ def main():
     for error in errors:
         st.error(error)
 
-    # Initialize session state for storing figure and data
-    if "fig" not in st.session_state:
-        st.session_state.fig = None
-    if "X_grid" not in st.session_state:
-        st.session_state.X_grid = None
+    # Show valid combinations
+    with st.expander("Show valid (BW, SF) combinations from dataset"):
+        st.write("Based on actual data distribution:")
+        df_valid = pd.DataFrame(sorted(valid_pairs), columns=["BW (kHz)", "SF"])
+        st.dataframe(df_valid)
 
     # Generate plot
     if st.button("Generate Coverage Map", disabled=len(errors) > 0):
         with st.spinner("Generating predictions..."):
             try:
-                fig, X_grid = predictor.plot_transmission_probability(
+                fig = predictor.plot_transmission_probability(
                     int(sf), bw, cr, gain, alt
                 )
-                # Store in session state
-                st.session_state.fig = fig
-                st.session_state.X_grid = X_grid
+                st.pyplot(fig)
             except Exception as e:
                 st.error(f"Error generating predictions: {str(e)}")
                 st.exception(e)
-
-    if st.session_state.X_grid is not None:
-        csv = st.session_state.X_grid.to_csv(index=False).encode("utf-8")
-    else:
-        csv = pd.DataFrame().to_csv(index=False).encode("utf-8")
-        
-    st.download_button(
-        label="Download Predictions as CSV",
-        data=csv,
-        file_name="transmission_predictions.csv",
-        mime="text/csv",
-        disabled=st.session_state.X_grid is None,
-    )
-    # Display the map if it exists in session state
-    if st.session_state.fig is not None:
-        st.pyplot(st.session_state.fig)
 
 
 if __name__ == "__main__":
