@@ -1,6 +1,7 @@
 # TinyGS QoS
 
 A machine learning tool for predicting satellite transmission quality of service (QoS) probabilities in the TinyGS network. This project provides a Streamlit web application and utilities for analyzing LoRa satellite transmission success rates based on orbital parameters and radio configuration.
+https://tinygsqos.streamlit.app/
 
 ## Overview
 
@@ -36,8 +37,10 @@ poetry install
 ### Using pip
 
 ```bash
-pip install -e .
+pip install .
 ```
+
+Note: This installs dependencies from `pyproject.toml`. For development, you may use `pip install -e .` for editable mode.
 
 ## Usage
 

@@ -1,21 +1,20 @@
-[project]
+[tool.poetry]
 name = "tinygs-qos"
 version = "0.1.0"
 description = ""
-authors = [
-    {name = "coleandreoli",email = "coleandreoli@gmail.com"}
-]
+authors = ["coleandreoli <coleandreoli@gmail.com>"]
 readme = "README.md"
-requires-python = ">=3.12"
-dependencies = [
-    "streamlit (>=1.52.2,<2.0.0)",
-    "pandas (>=2.3.3,<3.0.0)",
-    "numpy (>=1.26.4,<3.0.0)",
-    "scikit-learn (==1.5.2)",
-    "matplotlib (>=3.10.8,<4.0.0)",
-    "pulearn (>=0.0.11,<0.0.12)",
-    "pymap3d (>=3.2.0,<4.0.0)"
-]
+package-mode = false
+
+[tool.poetry.dependencies]
+python = ">=3.12"
+streamlit = ">=1.52.2,<2.0.0"
+pandas = ">=2.3.3,<3.0.0"
+numpy = ">=1.26.4,<3.0.0"
+scikit-learn = "1.5.2"
+matplotlib = ">=3.10.8,<4.0.0"
+pulearn = ">=0.0.11,<0.0.12"
+pymap3d = ">=3.2.0,<4.0.0"
 
 
 [build-system]
