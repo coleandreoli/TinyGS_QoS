@@ -15,7 +15,7 @@ st.set_page_config(
 )
 
 pu_f1_scorer = make_scorer(pu_f1_modified)
-st.title("TinyGS QoS Data Overview")
+st.title("TinyGS QoS Predictor")
 
 
 class TransmissionPredictor:
@@ -149,6 +149,7 @@ class TransmissionPredictor:
 
         # Predict probabilities for the grid
         X_grid["probability"] = self.predict_batch(X_grid)
+        self.X_grid = X_grid
 
         # Create plot
         test_size = int(np.sqrt(len(X_grid)))
@@ -285,6 +286,12 @@ def main():
     for error in errors:
         st.error(error)
 
+    # Initialize session state for storing figure and data
+    if "fig" not in st.session_state:
+        st.session_state.fig = None
+    if "X_grid" not in st.session_state:
+        st.session_state.X_grid = None
+
     # Generate plot
     if st.button("Generate Coverage Map", disabled=len(errors) > 0):
         with st.spinner("Generating predictions..."):
@@ -292,10 +299,26 @@ def main():
                 fig = predictor.plot_transmission_probability(
                     int(sf), bw, cr, gain, alt
                 )
-                st.pyplot(fig)
+                # Store in session state
+                st.session_state.fig = fig
+                st.session_state.X_grid = predictor.X_grid
             except Exception as e:
                 st.error(f"Error generating predictions: {str(e)}")
                 st.exception(e)
+    if st.session_state.X_grid is not None:
+        csv = st.session_state.X_grid.to_csv(index=False).encode("utf-8")
+    else:
+        csv = pd.DataFrame().to_csv(index=False).encode("utf-8")
+    st.download_button(
+        label="Download Predictions as CSV",
+        data=csv,
+        file_name="transmission_predictions.csv",
+        mime="text/csv",
+        disabled=st.session_state.X_grid is None,
+    )
+    # Display the map if it exists in session state
+    if st.session_state.fig is not None:
+        st.pyplot(st.session_state.fig)
 
 
 if __name__ == "__main__":
