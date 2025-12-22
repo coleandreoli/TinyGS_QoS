@@ -268,9 +268,6 @@ def main():
             step=50.0,
         )
 
-    # Validation and warnings
-    st.subheader("Validation")
-
     warnings = []
     errors = []
 
