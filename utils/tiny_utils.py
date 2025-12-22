@@ -141,9 +141,11 @@ def TestSample(
         lats = lats_grid.flatten()
         lngs = lngs_grid.flatten()
 
-    model_alt = joblib.load("data/kde_satPosAlt.joblib")
-    alt_samples = np.full(n_samples, alt)
-    alt_samples = model_alt.sample(n_samples)[:, 0]
+    if alt:
+        alt_samples = np.full(n_samples, alt)
+    else:
+        model_alt = joblib.load("data/kde_satPosAlt.joblib")
+        alt_samples = model_alt.sample(n_samples)[:, 0]
 
     # Define approved (bw, sf) pairs
     if bw is not None and sf is not None:
@@ -198,7 +200,6 @@ def TestSample(
     )
 
     # Load min_gain data
-
     if gain:
         X_random["min_gain"] = np.random.choice(gain, size=n_samples)
     else:

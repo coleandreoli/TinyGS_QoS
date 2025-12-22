@@ -9,6 +9,11 @@ from sklearn.metrics import make_scorer
 from utils.tiny_utils import pu_f1_modified
 from utils.tiny_utils import TestSample
 
+# Set page configuration - must be the first Streamlit command
+st.set_page_config(
+    page_title="TinyGS QoS", page_icon="🛰️", layout="wide", initial_sidebar_state="auto"
+)
+
 pu_f1_scorer = make_scorer(pu_f1_modified)
 st.title("TinyGS QoS Data Overview")
 
@@ -258,9 +263,9 @@ def main():
         alt = st.number_input(
             "Satellite Altitude (km)",
             min_value=400.0,
-            max_value=1600.0,
+            max_value=1100.0,
             value=600.0,
-            step=10.0,
+            step=50.0,
         )
 
     # Validation and warnings
@@ -276,36 +281,12 @@ def main():
             f"Valid pairs are: {sorted(valid_pairs)}"
         )
 
-    # SF constraints
-    if sf < 7 or sf > 11:
-        errors.append(f"Error: SF must be between 7 and 11 (got {sf})")
-
-    # BW constraints
-    valid_bw = [62.5, 125.0, 250.0, 500.0]
-    if bw not in valid_bw:
-        warnings.append(
-            f"Warning: BW={bw} kHz is non-standard. " f"Common values are: {valid_bw}"
-        )
-
-    # Gain constraints
-    if gain < -10 or gain > 20:
-        warnings.append(
-            f"Warning: Antenna gain of {gain} dB is unusual. "
-            f"Typical range is -10 to +20 dB"
-        )
-
     # Display warnings and errors
     for warning in warnings:
         st.warning(warning)
 
     for error in errors:
         st.error(error)
-
-    # Show valid combinations
-    with st.expander("Show valid (BW, SF) combinations from dataset"):
-        st.write("Based on actual data distribution:")
-        df_valid = pd.DataFrame(sorted(valid_pairs), columns=["BW (kHz)", "SF"])
-        st.dataframe(df_valid)
 
     # Generate plot
     if st.button("Generate Coverage Map", disabled=len(errors) > 0):
