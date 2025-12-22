@@ -39,6 +39,8 @@ class TransmissionPredictor:
         self.pipeline = joblib.load(model_path)
         self.packet_data = pd.read_parquet(data_path)
 
+        self.X_grid = None
+
     def predict(
         self,
         sat_alt: float,
@@ -305,10 +307,12 @@ def main():
             except Exception as e:
                 st.error(f"Error generating predictions: {str(e)}")
                 st.exception(e)
+
     if st.session_state.X_grid is not None:
         csv = st.session_state.X_grid.to_csv(index=False).encode("utf-8")
     else:
         csv = pd.DataFrame().to_csv(index=False).encode("utf-8")
+        
     st.download_button(
         label="Download Predictions as CSV",
         data=csv,
