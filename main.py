@@ -39,8 +39,6 @@ class TransmissionPredictor:
         self.pipeline = joblib.load(model_path)
         self.packet_data = pd.read_parquet(data_path)
 
-        self.X_grid = None
-
     def predict(
         self,
         sat_alt: float,
@@ -122,7 +120,7 @@ class TransmissionPredictor:
 
     def plot_transmission_probability(
         self, sf: int, bw: float, cr: int, gain: float, alt: float
-    ) -> plt.Figure:
+    ):
         """
         Generate a transmission probability heatmap.
 
@@ -141,8 +139,8 @@ class TransmissionPredictor:
 
         Returns:
         --------
-        matplotlib.figure.Figure
-            Figure containing the probability heatmap
+        tuple
+            (matplotlib.figure.Figure, pd.DataFrame) - Figure and X_grid data
         """
         # Generate grid samples
         X_grid = TestSample(
@@ -151,7 +149,6 @@ class TransmissionPredictor:
 
         # Predict probabilities for the grid
         X_grid["probability"] = self.predict_batch(X_grid)
-        self.X_grid = X_grid
 
         # Create plot
         test_size = int(np.sqrt(len(X_grid)))
@@ -196,7 +193,7 @@ class TransmissionPredictor:
         )
         ax.legend()
         plt.tight_layout()
-        return fig
+        return fig, X_grid
 
 
 @st.cache_resource
@@ -298,12 +295,12 @@ def main():
     if st.button("Generate Coverage Map", disabled=len(errors) > 0):
         with st.spinner("Generating predictions..."):
             try:
-                fig = predictor.plot_transmission_probability(
+                fig, X_grid = predictor.plot_transmission_probability(
                     int(sf), bw, cr, gain, alt
                 )
                 # Store in session state
                 st.session_state.fig = fig
-                st.session_state.X_grid = predictor.X_grid
+                st.session_state.X_grid = X_grid
             except Exception as e:
                 st.error(f"Error generating predictions: {str(e)}")
                 st.exception(e)
