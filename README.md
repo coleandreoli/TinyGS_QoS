@@ -8,9 +8,9 @@ https://tinygsqos.streamlit.app/
 TinyGS QoS uses machine learning (Positive-Unlabeled learning) to predict the probability of successful satellite transmissions based on:
 
 - Satellite position (latitude, longitude, altitude)
-- LoRa radio parameters (spreading factor, bandwidth, coding rate)
+- LoRa radio parameters (spreading factor, bandwidth)
 - Antenna configuration (gain)
-- Geometric factors (elevation angle, distance to nearest ground station)
+- Geometric factors (elevation angle, distance to the nearest ground station)
 
 ## Features
 
@@ -31,16 +31,14 @@ TinyGS QoS uses machine learning (Positive-Unlabeled learning) to predict the pr
 ### Using Poetry
 
 ```bash
-poetry install
+poetry add tinygs-qos
 ```
 
 ### Using pip
 
 ```bash
-pip install .
+pip install tinygs-qos
 ```
-
-Note: This installs dependencies from `pyproject.toml`. For development, you may use `pip install -e .` for editable mode.
 
 ## Usage
 
@@ -49,11 +47,12 @@ Note: This installs dependencies from `pyproject.toml`. For development, you may
 Launch the Streamlit interface:
 
 ```bash
-streamlit run main.py
+streamlit run tinygs_qos/streamlit_app.py
 ```
 
 The application provides:
-- Interactive parameter controls for SF, BW, CR, antenna gain, and altitude
+
+- Interactive parameter controls for SF, BW, antenna gain, and altitude
 - Validation for valid LoRa parameter combinations
 - Global transmission probability heatmaps
 - Overlay of actual transmission data
@@ -61,7 +60,7 @@ The application provides:
 ### Using the TransmissionPredictor Class
 
 ```python
-from main import TransmissionPredictor
+from tinygs_qos import TransmissionPredictor
 
 # Initialize predictor
 predictor = TransmissionPredictor()
@@ -71,7 +70,6 @@ prob = predictor.predict(
     sat_alt=600.0,      # Satellite altitude in km
     sf=10,              # Spreading factor
     bw=125.0,           # Bandwidth in kHz
-    cr=5,               # Coding rate
     min_gain=5.0,       # Antenna gain in dB
     el=45.0,            # Elevation angle in degrees
     distance_to_station=500.0  # Distance to nearest station in km
@@ -85,7 +83,7 @@ predictions = predictor.predict_batch(dataframe)
 ### Generating Test Samples
 
 ```python
-from utils.tiny_utils import TestSample, SSOOrbitTestSample
+from tinygs_qos.utils.tiny_utils import TestSample, SSOOrbitTestSample
 
 # Random global samples
 X_test = TestSample(
@@ -93,7 +91,6 @@ X_test = TestSample(
     rand_lat=True,
     sf=[10],
     bw=[125.0],
-    cr=[5],
     gain=[5.0],
     alt=600.0
 )
@@ -125,20 +122,21 @@ The project requires the following data files in the `data/` directory:
 The model supports the following (Bandwidth, Spreading Factor) pairs based on actual TinyGS data:
 
 | Bandwidth (kHz) | Spreading Factor |
-|----------------|------------------|
-| 125.0          | 7                |
-| 62.5           | 8                |
-| 125.0          | 8                |
-| 125.0          | 9                |
-| 500.0          | 9                |
-| 125.0          | 10               |
-| 250.0          | 10               |
-| 125.0          | 11               |
+| --------------- | ---------------- |
+| 125.0           | 7                |
+| 62.5            | 8                |
+| 125.0           | 8                |
+| 125.0           | 9                |
+| 500.0           | 9                |
+| 125.0           | 10               |
+| 250.0           | 10               |
+| 125.0           | 11               |
 
 ## Model Details
 
 The prediction model uses:
+
 - Positive-Unlabeled (PU) learning framework
 - Modified F1 score metric optimized for PU learning
-- Features: satellite altitude, spreading factor, bandwidth, coding rate, elevation angle, distance to station, antenna gain
+- Features: satellite altitude, spreading factor, bandwidth, elevation angle, distance to station, antenna gain
 - Training via Optuna hyperparameter optimization

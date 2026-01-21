@@ -117,7 +117,6 @@ def TestSample(
     rand_lat: bool = False,
     sf: list = None,
     bw: list = None,
-    cr: list = None,
     gain: list = None,
     alt: float = 600.0,
 ):
@@ -187,16 +186,11 @@ def TestSample(
     bw_samples = approved_pairs_array[sampled_indices, 0]
     sf_samples = approved_pairs_array[sampled_indices, 1]
 
-    # cr_categories = np.array([5, 6, 8])
-    # cr_probabilities = np.array([0.87976141, 0.10780799, 0.0124306])
-    # cr_samples = np.random.choice(cr_categories, size=n_samples, p=cr_probabilities)
-    cr_samples = np.full(n_samples, cr)
-
-    X_random = np.vstack([lats, lngs, alt_samples, sf_samples, bw_samples, cr_samples])
+    X_random = np.vstack([lats, lngs, alt_samples, sf_samples, bw_samples])
 
     X_random = numpy_to_features(
         X_random.T,
-        column_names=["satPosLat", "satPosLng", "satPosAlt", "sf", "bw", "cr"],
+        column_names=["satPosLat", "satPosLng", "satPosAlt", "sf", "bw"],
     )
 
     # Load min_gain data
@@ -353,20 +347,15 @@ def SSOOrbitTestSample(
     sf_samples = np.full(n_samples, sf)
     bw_samples = np.full(n_samples, bw)
 
-    # Use coding rate distribution from TestSample
-    cr_categories = np.array([5, 6, 8])
-    cr_probabilities = np.array([0.87976141, 0.10780799, 0.0124306])
-    cr_samples = np.random.choice(cr_categories, size=n_samples, p=cr_probabilities)
-
     gain_samples = np.full(n_samples, gain)
 
     # Create feature array
-    X_orbit = np.column_stack([lats, lons, alts, sf_samples, bw_samples, cr_samples])
+    X_orbit = np.column_stack([lats, lons, alts, sf_samples, bw_samples])
 
     # Add features using existing function
     X_orbit_df = numpy_to_features(
         X_orbit,
-        column_names=["satPosLat", "satPosLng", "satPosAlt", "sf", "bw", "cr"],
+        column_names=["satPosLat", "satPosLng", "satPosAlt", "sf", "bw"],
     )
 
     X_orbit_df["min_gain"] = gain_samples

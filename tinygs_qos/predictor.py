@@ -1,9 +1,7 @@
-import streamlit as st
 import pandas as pd
 import numpy as np
 import matplotlib.pyplot as plt
 import joblib
-from sklearn.metrics import make_scorer
 
 
 from utils.tiny_utils import pu_f1_modified
@@ -18,7 +16,7 @@ class TransmissionPredictor:
 
     def __init__(
         self,
-        model_path="data/PU_optuna_SDG_log_loss_12_7_v2.joblib",
+        model_path="data/PU_optuna_SDG_log_loss_v4.joblib",
         data_path="data/packet_features.parquet",
     ):
         """
@@ -39,7 +37,6 @@ class TransmissionPredictor:
         sat_alt: float,
         sf: int,
         bw: float,
-        cr: int,
         min_gain: float,
         el: float,
         distance_to_station: float,
@@ -55,8 +52,6 @@ class TransmissionPredictor:
             LoRa spreading factor (7-12)
         bw : float
             LoRa bandwidth in kHz (e.g., 62.5, 125.0, 250.0, 500.0)
-        cr : int
-            LoRa coding rate (5, 6, or 8)
         min_gain : float
             Minimum antenna gain in dB
         el : float
@@ -69,7 +64,7 @@ class TransmissionPredictor:
         float
             Predicted probability of transmission (0-1)
         """
-        features = np.array([[sat_alt, sf, bw, cr, el, distance_to_station, min_gain]])
+        features = np.array([[sat_alt, sf, bw, el, distance_to_station, min_gain]])
 
         # Return probability of positive class
         return self.pipeline.predict_proba(features)[0, 1]
@@ -93,7 +88,6 @@ class TransmissionPredictor:
             "satPosAlt",
             "sf",
             "bw",
-            "cr",
             "el",
             "distance_to_station",
             "min_gain",
@@ -105,7 +99,7 @@ class TransmissionPredictor:
         return self.pipeline.predict_proba(X.values)[:, 1]
 
     def score(self, X, y):
-        from utils.tiny_utils import pu_f1_modified
+        from tinygs_qos.utils.tiny_utils import pu_f1_modified
         from sklearn.metrics import recall_score
 
         y_pred = self.predict_batch(X)
@@ -125,8 +119,6 @@ class TransmissionPredictor:
             Spreading factor
         bw : float
             Bandwidth in kHz
-        cr: int
-            Coding rate
         gain : float
             Antenna gain in dB
         alt : float
@@ -139,9 +131,8 @@ class TransmissionPredictor:
         """
         # Generate grid samples
         X_grid = TestSample(
-            10000, sf=[sf], bw=[bw], cr=[cr], gain=[gain], alt=alt, rand_lat=False
+            10000, sf=[sf], bw=[bw], gain=[gain], alt=alt, rand_lat=False
         )
-
         # Predict probabilities for the grid
         X_grid["probability"] = self.predict_batch(X_grid)
 
@@ -186,7 +177,7 @@ class TransmissionPredictor:
             color="black",
             label="True Transmissions",
         )
-        ax.legend()
+        ax.legend(loc="upper right")
         plt.tight_layout()
         return fig
 
