@@ -134,7 +134,6 @@ class TransmissionPredictor:
         # Create plot
         test_size = int(np.sqrt(len(X_grid)))
         fig, ax = plt.subplots(figsize=(14, 7))
-        plt.rcParams.update({"font.size": 14})
 
         im = ax.contourf(
             X_grid["satPosLng"].values.reshape(test_size, test_size),
@@ -145,7 +144,7 @@ class TransmissionPredictor:
             vmin=0,
             vmax=1,
         )
-        cbar = plt.colorbar(im, ax=ax, label="Probability of Transmission")
+        cbar = fig.colorbar(im, ax=ax, label="Probability of Transmission")
         cbar.set_ticks([0, 0.25, 0.5, 0.75, 1.0])
 
         ax.set_xlabel("Longitude", fontsize=14)
@@ -173,5 +172,5 @@ class TransmissionPredictor:
             label="True Transmissions",
         )
         ax.legend(loc="upper right")
-        plt.tight_layout()
+        fig.tight_layout()
         return fig, X_grid
