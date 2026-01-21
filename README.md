@@ -47,7 +47,7 @@ pip install tinygs-qos
 Launch the Streamlit interface:
 
 ```bash
-streamlit run tinygs_qos/streamlit_app.py
+streamlit run main.py
 ```
 
 The application provides:

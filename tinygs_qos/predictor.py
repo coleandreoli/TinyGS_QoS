@@ -3,12 +3,7 @@ import numpy as np
 import matplotlib.pyplot as plt
 import joblib
 
-
-from utils.tiny_utils import pu_f1_modified
-from utils.tiny_utils import TestSample
-
-pu_f1_scorer = make_scorer(pu_f1_modified)
-st.title("TinyGS QoS Data Overview")
+from tinygs_qos.utils.tiny_utils import TestSample
 
 
 class TransmissionPredictor:
@@ -108,8 +103,8 @@ class TransmissionPredictor:
         return {"recall": recall, "f1_mod": f1_mod}
 
     def plot_transmission_probability(
-        self, sf: int, bw: float, cr: int, gain: float, alt: float
-    ) -> plt.Figure:
+        self, sf: int, bw: float, gain: float, alt: float
+    ):
         """
         Generate a transmission probability heatmap.
 
@@ -126,8 +121,8 @@ class TransmissionPredictor:
 
         Returns:
         --------
-        matplotlib.figure.Figure
-            Figure containing the probability heatmap
+        tuple
+            (matplotlib.figure.Figure, pd.DataFrame) - Figure and X_grid data
         """
         # Generate grid samples
         X_grid = TestSample(
@@ -158,7 +153,7 @@ class TransmissionPredictor:
         ax.set_xlim(-180, 180)
         ax.set_ylim(-90, 90)
         ax.set_title(
-            f"Transmission Probability: SF={sf}, BW={bw}, Gain={gain}, Alt={alt} km",
+            f"Transmission Probability: SF={sf}, BW={bw:.2f}, Gain={gain:.2f}, Alt={alt:.2f} km",
             fontsize=14,
         )
 
@@ -179,137 +174,4 @@ class TransmissionPredictor:
         )
         ax.legend(loc="upper right")
         plt.tight_layout()
-        return fig
-
-
-@st.cache_resource
-def load_predictor():
-    """Load and cache the predictor instance."""
-    return TransmissionPredictor()
-
-
-def main():
-    # Load predictor (cached)
-    predictor = load_predictor()
-
-    # Define valid (bw, sf) pairs based on your data
-    valid_pairs = {
-        (125.0, 7),
-        (62.5, 8),
-        (125.0, 8),
-        (125.0, 9),
-        (500.0, 9),
-        (125.0, 10),
-        (250.0, 10),
-        (125.0, 11),
-    }
-
-    # Input section
-    st.header("Input Parameters")
-
-    col1, col2, col3 = st.columns(3)
-
-    with col1:
-        sf = st.number_input(
-            "Spreading Factor (SF)",
-            min_value=7,
-            max_value=11,
-            value=10,
-            step=1,
-            help="LoRa spreading factor (7-11)",
-        )
-
-    with col2:
-        bw = st.selectbox(
-            "Select Bandwidth (kHz)",
-            options=[62.5, 125.0, 250.0, 500.0],
-            index=1,
-            help="LoRa bandwidth in kHz",
-        )
-    with col3:
-        cr = st.selectbox(
-            "Select Coding Rate",
-            options=[5, 6, 8],
-            index=0,
-            help="LoRa coding rate",
-        )
-
-    col4, col5 = st.columns(2)
-    with col4:
-        gain = st.number_input(
-            "Antenna Gain (dB)",
-            min_value=-10.0,
-            max_value=20.0,
-            value=5.0,
-            step=0.5,
-            help="Minimum antenna gain in dB",
-        )
-
-    with col5:
-        alt = st.number_input(
-            "Satellite Altitude (km)",
-            min_value=400.0,
-            max_value=1600.0,
-            value=600.0,
-            step=10.0,
-        )
-
-    # Validation and warnings
-    st.subheader("Validation")
-
-    warnings = []
-    errors = []
-
-    # Check if (bw, sf) pair is valid
-    if (bw, int(sf)) not in valid_pairs:
-        warnings.append(
-            f"Warning: (BW={bw}, SF={int(sf)}) is not a commonly used combination. "
-            f"Valid pairs are: {sorted(valid_pairs)}"
-        )
-
-    # SF constraints
-    if sf < 7 or sf > 11:
-        errors.append(f"Error: SF must be between 7 and 11 (got {sf})")
-
-    # BW constraints
-    valid_bw = [62.5, 125.0, 250.0, 500.0]
-    if bw not in valid_bw:
-        warnings.append(
-            f"Warning: BW={bw} kHz is non-standard. " f"Common values are: {valid_bw}"
-        )
-
-    # Gain constraints
-    if gain < -10 or gain > 20:
-        warnings.append(
-            f"Warning: Antenna gain of {gain} dB is unusual. "
-            f"Typical range is -10 to +20 dB"
-        )
-
-    # Display warnings and errors
-    for warning in warnings:
-        st.warning(warning)
-
-    for error in errors:
-        st.error(error)
-
-    # Show valid combinations
-    with st.expander("Show valid (BW, SF) combinations from dataset"):
-        st.write("Based on actual data distribution:")
-        df_valid = pd.DataFrame(sorted(valid_pairs), columns=["BW (kHz)", "SF"])
-        st.dataframe(df_valid)
-
-    # Generate plot
-    if st.button("Generate Coverage Map", disabled=len(errors) > 0):
-        with st.spinner("Generating predictions..."):
-            try:
-                fig = predictor.plot_transmission_probability(
-                    int(sf), bw, cr, gain, alt
-                )
-                st.pyplot(fig)
-            except Exception as e:
-                st.error(f"Error generating predictions: {str(e)}")
-                st.exception(e)
-
-
-if __name__ == "__main__":
-    main()
+        return fig, X_grid
