@@ -1,20 +1,22 @@
 [project]
 name = "tinygs-qos"
 version = "0.1.0"
-description = ""
+description = "Predict TinyGS network coverage for different LoRa configurations"
 authors = [
     {name = "coleandreoli",email = "coleandreoli@gmail.com"}
 ]
+license = {text = "MIT"}
 readme = "README.md"
 requires-python = ">=3.12"
 dependencies = [
-    "streamlit (>=1.52.2,<2.0.0)",
-    "pandas (>=2.3.3,<3.0.0)",
-    "numpy (>=1.26.4,<3.0.0)",
+    "numpy (>=1.26.4,<2.0.0)",
+    "matplotlib (>=3.9.0,<3.10.0)",
     "scikit-learn (==1.5.2)",
-    "matplotlib (>=3.10.8,<4.0.0)",
+    "pandas (>=2.3.3,<3.0.0)",
+    "pymap3d (>=3.2.0,<4.0.0)",
+    "scipy (>=1.17.0,<2.0.0)",
+    "streamlit (>=1.53.0,<2.0.0)",
     "pulearn (>=0.0.11,<0.0.12)",
-    "pymap3d (>=3.2.0,<4.0.0)"
 ]
 
 
@@ -24,6 +26,5 @@ build-backend = "poetry.core.masonry.api"
 
 [dependency-groups]
 dev = [
-    "pre-commit (>=4.5.1,<5.0.0)",
-    "black (>=26.1.0,<27.0.0)"
+    "pre-commit (>=4.5.1,<5.0.0)"
 ]
